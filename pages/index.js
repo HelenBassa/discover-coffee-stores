@@ -3,11 +3,23 @@ import Image from "next/image";
 import { Inter } from "next/font/google";
 import styles from "@/styles/Home.module.css";
 
-import Banner from "../components/Banner.js";
+import Banner from "@/components/Banner.js";
+import Card from "@/components/Card.js";
 
-const inter = Inter({ subsets: ["latin"] });
+import coffeeStoresData from "@/data/coffee-stores.json";
 
-export default function Home() {
+// const inter = Inter({ subsets: ["latin"] });
+
+export async function getStaticProps(context) {
+  return {
+    props: {
+      coffeeStores: coffeeStoresData,
+    }, // will be passed to the page component as props
+  };
+}
+
+export default function Home(props) {
+  console.log("props", props);
   const handleOnBannerBtnClick = () => {
     console.log("hi banner button");
   };
@@ -34,6 +46,24 @@ export default function Home() {
             priority={true}
           />
         </div>
+        {props.coffeeStores.length > 0 && (
+          <>
+            {" "}
+            <h2 className={styles.heading2}>Toronto stores</h2>
+            <div className={styles.cardLayout}>
+              {props.coffeeStores.map((coffeeStore) => (
+                <Card
+                  key={coffeeStore.id}
+                  name={coffeeStore.name}
+                  alt={coffeeStore.name}
+                  imgUrl={coffeeStore.imgUrl}
+                  href={`/coffee-store/${coffeeStore.id}`}
+                  className={styles.card}
+                />
+              ))}
+            </div>
+          </>
+        )}
       </main>
     </>
   );
