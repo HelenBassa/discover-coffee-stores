@@ -1,25 +1,27 @@
 import Head from "next/head";
 import Image from "next/image";
 import { Inter } from "next/font/google";
+
 import styles from "@/styles/Home.module.css";
+
+import coffeeStoresData from "@/data/coffee-stores.json";
+import { defaultImgUrl, fetchCoffeeStores } from "@/lib/coffee-store";
 
 import Banner from "@/components/Banner.js";
 import Card from "@/components/Card.js";
-
-import coffeeStoresData from "@/data/coffee-stores.json";
-
 // const inter = Inter({ subsets: ["latin"] });
 
 export async function getStaticProps(context) {
+  const coffeeStores = await fetchCoffeeStores();
+
   return {
     props: {
-      coffeeStores: coffeeStoresData,
+      coffeeStores,
     }, // will be passed to the page component as props
   };
 }
 
 export default function Home(props) {
-  // console.log("props", props);
   const handleOnBannerBtnClick = () => {
     console.log("hi banner button");
   };
@@ -39,6 +41,7 @@ export default function Home(props) {
         />
         <div className={styles.heroImage}>
           <Image
+            className={styles.heroImg}
             alt="hero"
             src="/static/hero-image.png"
             width={900}
@@ -47,22 +50,22 @@ export default function Home(props) {
           />
         </div>
         {props.coffeeStores.length > 0 && (
-          <>
+          <div className={styles.sectionWrapper}>
             {" "}
-            <h2 className={styles.heading2}>Toronto stores</h2>
+            <h2 className={styles.heading2}>Warszawa coffeestores</h2>
             <div className={styles.cardLayout}>
               {props.coffeeStores.map((coffeeStore) => (
                 <Card
                   key={coffeeStore.id}
                   name={coffeeStore.name}
                   alt={coffeeStore.name}
-                  imgUrl={coffeeStore.imgUrl}
+                  imgUrl={coffeeStore.imgUrl || defaultImgUrl}
                   href={`/coffee-store/${coffeeStore.id}`}
                   className={styles.card}
                 />
               ))}
             </div>
-          </>
+          </div>
         )}
       </main>
     </>

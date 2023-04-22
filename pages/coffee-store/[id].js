@@ -4,26 +4,32 @@ import Head from "next/head";
 import Image from "next/image";
 import cls from "classnames";
 
-import coffeeStoresData from "@/data/coffee-stores.json";
-
 import styles from "@/styles/CoffeeStores.module.css";
 
-export function getStaticProps(staticProps) {
+import coffeeStoresData from "@/data/coffee-stores.json";
+import { defaultImgUrl, fetchCoffeeStores } from "@/lib/coffee-store";
+
+export async function getStaticProps(staticProps) {
   const params = staticProps.params;
+
+  const coffeeStores = await fetchCoffeeStores();
+
   return {
     props: {
-      coffeeStore: coffeeStoresData.find((coffeeStore) => {
-        return coffeeStore.id === +params.id; //convert to number
+      coffeeStore: coffeeStores.find((coffeeStore) => {
+        return coffeeStore.id.toString() === params.id;
       }),
     },
   };
 }
 
-export function getStaticPaths() {
-  const paths = coffeeStoresData.map((coffeeStore) => {
+export async function getStaticPaths() {
+  const coffeeStores = await fetchCoffeeStores();
+
+  const paths = coffeeStores.map((coffeeStore) => {
     return {
       params: {
-        id: coffeeStore.id + "", //convert to string
+        id: coffeeStore.id.toString(),
       },
     };
   });
@@ -41,7 +47,7 @@ const CoffeeStore = (props) => {
     return <div>Loading ...</div>;
   }
 
-  const { name, address, neighbourhood, imgUrl } = props.coffeeStore;
+  const { name, address, distance, imgUrl } = props.coffeeStore;
 
   const handleUpVoteButton = () => {
     console.log("handle upvote");
@@ -55,15 +61,15 @@ const CoffeeStore = (props) => {
       <div className={styles.container}>
         <div className={styles.col1}>
           <div className={styles.backToHomeLink}>
-            <Link href="/">Back to Home</Link>
+            <Link href="/">← Back to Home</Link>
           </div>
           <div className={styles.nameWrapper}>
-            <h1 className={styles.name}>Name: {name}</h1>
+            <h1 className={styles.name}>{name}</h1>
           </div>
           <Image
             className={styles.storeImg}
             alt={name}
-            src={imgUrl}
+            src={imgUrl || defaultImgUrl}
             width={600}
             height={360}
           />
@@ -71,11 +77,11 @@ const CoffeeStore = (props) => {
         <div className={cls("glass", styles.col2)}>
           <div className={styles.iconWrapper}>
             <Image src="/static/icons/places.svg" width={24} height={24} />
-            <p className={styles.text}>Address: {address}</p>
+            <p className={styles.text}>{address}</p>
           </div>
           <div className={styles.iconWrapper}>
             <Image src="/static/icons/nearMe.svg" width={24} height={24} />
-            <p className={styles.text}>{neighbourhood}</p>
+            <p className={styles.text}>{distance} meters</p>
           </div>
           <div className={styles.iconWrapper}>
             <Image src="/static/icons/star.svg" width={24} height={24} />
