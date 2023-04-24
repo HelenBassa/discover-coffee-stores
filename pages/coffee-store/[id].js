@@ -1,3 +1,4 @@
+import { useContext, useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import Head from "next/head";
@@ -8,17 +9,21 @@ import styles from "@/styles/CoffeeStores.module.css";
 
 import coffeeStoresData from "@/data/coffee-stores.json";
 import { defaultImgUrl, fetchCoffeeStores } from "@/lib/coffee-store";
+import { StoreContext } from "@/store/store-context";
+import { isEmpty } from "@/utils";
 
 export async function getStaticProps(staticProps) {
   const params = staticProps.params;
 
   const coffeeStores = await fetchCoffeeStores();
 
+  const findCoffeeStoreById = coffeeStores.find((coffeeStore) => {
+    return coffeeStore.id.toString() === params.id;
+  });
+
   return {
     props: {
-      coffeeStore: coffeeStores.find((coffeeStore) => {
-        return coffeeStore.id.toString() === params.id;
-      }),
+      coffeeStore: findCoffeeStoreById ? findCoffeeStoreById : {},
     },
   };
 }
@@ -36,18 +41,37 @@ export async function getStaticPaths() {
 
   return {
     paths,
-    fallback: true,
+    fallback: true, // false - return 404 page
   };
 }
 
-const CoffeeStore = (props) => {
+const CoffeeStore = (initialProps) => {
   const router = useRouter();
 
   if (router.isFallback) {
     return <div>Loading ...</div>;
   }
 
-  const { name, address, distance, imgUrl } = props.coffeeStore;
+  const id = router.query.id;
+
+  const [coffeeStore, setCoffeeStore] = useState(initialProps.coffeeStore);
+
+  const {
+    state: { coffeeStores },
+  } = useContext(StoreContext);
+
+  useEffect(() => {
+    if (isEmpty(initialProps.coffeeStore)) {
+      if (coffeeStores.length > 0) {
+        const findCoffeeStoreById = coffeeStores.find((coffeeStore) => {
+          return coffeeStore.id.toString() === id;
+        });
+        setCoffeeStore(findCoffeeStoreById);
+      }
+    }
+  }, [id]);
+
+  const { name, address, distance, imgUrl } = coffeeStore;
 
   const handleUpVoteButton = () => {
     console.log("handle upvote");
@@ -58,31 +82,38 @@ const CoffeeStore = (props) => {
       <Head>
         <title>{name}</title>
       </Head>
+      <div className={styles.header}>
+        <div className={styles.backToHomeLink}>
+          <Link href="/">← Back to Home</Link>
+        </div>
+        <div className={styles.nameWrapper}>
+          <h1 className={styles.name}>{name}</h1>
+        </div>
+      </div>
+
       <div className={styles.container}>
         <div className={styles.col1}>
-          <div className={styles.backToHomeLink}>
-            <Link href="/">← Back to Home</Link>
-          </div>
-          <div className={styles.nameWrapper}>
-            <h1 className={styles.name}>{name}</h1>
-          </div>
           <Image
             className={styles.storeImg}
-            alt={name}
+            alt={name || "defaultImgUrl"}
             src={imgUrl || defaultImgUrl}
             width={600}
             height={360}
           />
         </div>
         <div className={cls("glass", styles.col2)}>
-          <div className={styles.iconWrapper}>
-            <Image src="/static/icons/places.svg" width={24} height={24} />
-            <p className={styles.text}>{address}</p>
-          </div>
-          <div className={styles.iconWrapper}>
-            <Image src="/static/icons/nearMe.svg" width={24} height={24} />
-            <p className={styles.text}>{distance} meters</p>
-          </div>
+          {address && (
+            <div className={styles.iconWrapper}>
+              <Image src="/static/icons/places.svg" width={24} height={24} />
+              <p className={styles.text}>{address}</p>
+            </div>
+          )}
+          {distance && (
+            <div className={styles.iconWrapper}>
+              <Image src="/static/icons/nearMe.svg" width={24} height={24} />
+              <p className={styles.text}>{distance} meters</p>
+            </div>
+          )}
           <div className={styles.iconWrapper}>
             <Image src="/static/icons/star.svg" width={24} height={24} />
             <p className={styles.text}>1</p>

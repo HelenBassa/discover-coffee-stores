@@ -1,3 +1,4 @@
+import { useEffect, useState, useContext } from "react";
 import Head from "next/head";
 import Image from "next/image";
 import { Inter } from "next/font/google";
@@ -5,10 +6,12 @@ import { Inter } from "next/font/google";
 import styles from "@/styles/Home.module.css";
 
 import coffeeStoresData from "@/data/coffee-stores.json";
-import { defaultImgUrl, fetchCoffeeStores } from "@/lib/coffee-store";
+import { defaultImgUrl, fetchCoffeeStores, limit } from "@/lib/coffee-store";
 
 import Banner from "@/components/Banner.js";
 import Card from "@/components/Card.js";
+import useTrackLocation from "@/hooks/use-track-location";
+import { ACTION_TYPES, StoreContext } from "@/store/store-context";
 // const inter = Inter({ subsets: ["latin"] });
 
 export async function getStaticProps(context) {
@@ -22,8 +25,43 @@ export async function getStaticProps(context) {
 }
 
 export default function Home(props) {
+  const { handleTrackLocation, locationErrorMsg, isFindingLocation } =
+    useTrackLocation();
+
+  const { dispatch, state } = useContext(StoreContext);
+  const { coffeeStores, latLong } = state;
+
+  console.log({ latLong, locationErrorMsg });
+
+  // const [coffeeStores, setCoffeeStores] = useState("");
+  const [coffeeStoresError, setCoffeeStoresError] = useState(null);
+
+  useEffect(() => {
+    async function setCoffeeStoresByLocation() {
+      if (latLong) {
+        try {
+          const fetchedCoffeeStores = await fetchCoffeeStores(latLong, limit);
+          console.log({ fetchedCoffeeStores });
+          dispatch({
+            type: ACTION_TYPES.SET_COFFEE_STORES,
+            payload: {
+              coffeeStores: fetchedCoffeeStores,
+            },
+          });
+          // setCoffeeStores(fetchedCoffeeStores);
+        } catch (err) {
+          console.log({ err });
+          setCoffeeStoresError(err.message);
+        }
+      }
+    }
+
+    setCoffeeStoresByLocation();
+  }, [latLong]);
+
   const handleOnBannerBtnClick = () => {
     console.log("hi banner button");
+    handleTrackLocation();
   };
 
   return (
@@ -36,23 +74,55 @@ export default function Home(props) {
       </Head>
       <main className={styles.main}>
         <Banner
-          buttonText="View stores nearby"
+          buttonText={isFindingLocation ? "Locating ..." : "View stores nearby"}
           handleOnClick={handleOnBannerBtnClick}
         />
+        {locationErrorMsg && (
+          <div className={styles.errorMsg}>
+            <b>Something went wrong: &nbsp;</b>
+            <i>{locationErrorMsg}</i>
+          </div>
+        )}
+        {coffeeStoresError && (
+          <div className={styles.errorMsg}>
+            <b>Something went wrong: &nbsp;</b>
+            <i>{coffeeStoresError}</i>
+          </div>
+        )}
         <div className={styles.heroImage}>
           <Image
             className={styles.heroImg}
             alt="hero"
             src="/static/hero-image.png"
-            width={900}
-            height={400}
+            width={600}
+            height={300}
             priority={true}
           />
         </div>
+
+        {coffeeStores.length > 0 && (
+          <div className={styles.sectionWrapper}>
+            {" "}
+            <h2 className={styles.heading2}>Stores near me</h2>
+            <div className={styles.cardLayout}>
+              {coffeeStores.map((coffeeStore) => (
+                <Card
+                  key={coffeeStore.id}
+                  name={coffeeStore.name}
+                  alt={coffeeStore.name}
+                  imgUrl={coffeeStore.imgUrl || defaultImgUrl}
+                  href={`/coffee-store/${coffeeStore.id}`}
+                  className={styles.card}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
         {props.coffeeStores.length > 0 && (
           <div className={styles.sectionWrapper}>
             {" "}
-            <h2 className={styles.heading2}>Warszawa coffeestores</h2>
+            <h2 className={styles.heading2}>Warszawa coffee stores</h2>
             <div className={styles.cardLayout}>
               {props.coffeeStores.map((coffeeStore) => (
                 <Card
