@@ -1,9 +1,19 @@
+.header {
+  display: flex;
+    flex-direction: column;
+    padding-top: 1.75rem /* 28px */;
+    padding-bottom: 1.75rem /* 28px */;
+    padding-left: 1.75rem /* 12px */;
+    padding-right: 0.75rem /* 12px */;
+}
+
 .container {
   display: grid;
   padding-top: 1.75rem /* 28px */;
   padding-bottom: 1.75rem /* 28px */;
   padding-left: 1.75rem /* 12px */;
   padding-right: 0.75rem /* 12px */;
+  align-items: start;
 }
 
 .layout {
@@ -12,6 +22,8 @@
 
 .col1 {
   place-self: center;
+  margin-bottom: 1rem /* 16px */;
+
 }
 
 .backToHomeLink {
@@ -30,7 +42,7 @@
 .name {
   color: var(--text-white-100);
   font-size: 2.25rem /* 36px */;
-  line-height: 2.5rem /* 40px */;
+  line-height: 3.5rem /* 40px */;
   text-overflow: ellipsis;
   white-space: normal;
   overflow: hidden;
@@ -59,8 +71,8 @@
   display: flex;
   flex-direction: column;
   margin-left: 0.5rem /* 8px */;
-  align-self: center;
-  margin-top: 4rem /* 64px */;
+  /* align-self: center; */
+  /* margin-top: 8rem /* 64px */; 
   color: rgba(55, 59, 100, 1);
 }
 
