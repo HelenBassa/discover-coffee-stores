@@ -1,18 +1,15 @@
 import { useEffect, useState, useContext } from "react";
 import Head from "next/head";
 import Image from "next/image";
-import { Inter } from "next/font/google";
 
 import styles from "@/styles/Home.module.css";
 
-import coffeeStoresData from "@/data/coffee-stores.json";
 import { defaultImgUrl, fetchCoffeeStores, limit } from "@/lib/coffee-store";
 
 import Banner from "@/components/Banner.js";
 import Card from "@/components/Card.js";
 import useTrackLocation from "@/hooks/use-track-location";
 import { ACTION_TYPES, StoreContext } from "@/store/store-context";
-// const inter = Inter({ subsets: ["latin"] });
 
 export async function getStaticProps(context) {
   const coffeeStores = await fetchCoffeeStores();
@@ -20,7 +17,7 @@ export async function getStaticProps(context) {
   return {
     props: {
       coffeeStores,
-    }, // will be passed to the page component as props
+    },
   };
 }
 
@@ -31,23 +28,18 @@ export default function Home(props) {
   const { dispatch, state } = useContext(StoreContext);
   const { coffeeStores, latLong } = state;
 
-  console.log({ latLong, locationErrorMsg });
-
-  // const [coffeeStores, setCoffeeStores] = useState("");
   const [coffeeStoresError, setCoffeeStoresError] = useState(null);
 
   useEffect(() => {
     async function setCoffeeStoresByLocation() {
       if (latLong) {
         try {
-          // const fetchedCoffeeStores = await fetchCoffeeStores(latLong, limit);
           const response = await fetch(
             `/api/getCoffeeStoresByLocation?latLong=${latLong}&limit=${limit}`
           );
 
           const coffeeStores = await response.json();
 
-          console.log("fetched coffee stores", { coffeeStores });
           dispatch({
             type: ACTION_TYPES.SET_COFFEE_STORES,
             payload: {
@@ -55,10 +47,9 @@ export default function Home(props) {
             },
           });
           setCoffeeStoresError("");
-          // setCoffeeStores(fetchedCoffeeStores);
-        } catch (err) {
-          console.log({ err });
-          setCoffeeStoresError(err.message);
+        } catch (error) {
+          console.error({ error });
+          setCoffeeStoresError(error.message);
         }
       }
     }
@@ -67,7 +58,6 @@ export default function Home(props) {
   }, [latLong]);
 
   const handleOnBannerBtnClick = () => {
-    console.log("hi banner button");
     handleTrackLocation();
   };
 
@@ -129,7 +119,9 @@ export default function Home(props) {
         {props.coffeeStores.length > 0 && (
           <div className={styles.sectionWrapper}>
             {" "}
-            <h2 className={styles.heading2}>Warszawa coffee stores</h2>
+            <h2 className={styles.heading2}>
+              Warszawa centralna - coffee stores
+            </h2>
             <div className={styles.cardLayout}>
               {props.coffeeStores.map((coffeeStore) => (
                 <Card

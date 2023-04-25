@@ -6,13 +6,11 @@ const createCoffeeStore = async (req, res) => {
 
     try {
       if (id) {
-        // find a record
         const records = await findRecordByFilter(id);
 
         if (records.length !== 0) {
           res.json(records);
         } else {
-          // create a record
           if (name) {
             const createRecords = await table.create([
               {
@@ -36,8 +34,6 @@ const createCoffeeStore = async (req, res) => {
             res.json({ message: "Id or name is missing" });
           }
         }
-
-        res.json({ message: "Hi Helen! It's POST" });
       } else {
         res.status(400);
         res.json({ message: "Id is missing" });
