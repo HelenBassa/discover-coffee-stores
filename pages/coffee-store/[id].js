@@ -3,14 +3,16 @@ import { useRouter } from "next/router";
 import Link from "next/link";
 import Head from "next/head";
 import Image from "next/image";
+import useSWR from "swr";
+
 import cls from "classnames";
 
 import styles from "@/styles/CoffeeStores.module.css";
 
-import coffeeStoresData from "@/data/coffee-stores.json";
 import { defaultImgUrl, fetchCoffeeStores } from "@/lib/coffee-store";
+import { isEmpty, fetcher } from "@/utils";
+
 import { StoreContext } from "@/store/store-context";
-import { isEmpty } from "@/utils";
 
 export async function getStaticProps(staticProps) {
   const params = staticProps.params;
@@ -77,9 +79,6 @@ const CoffeeStore = (initialProps) => {
           imgUrl,
         }),
       });
-
-      const dbCoffeeStore = await response.json();
-      console.log({ dbCoffeeStore });
     } catch (error) {
       console.error("Error creating coffee store", error);
     }
@@ -104,13 +103,43 @@ const CoffeeStore = (initialProps) => {
 
   const { name, address, distance, imgUrl } = coffeeStore;
 
-  const [votingCount, setVotingCount] = useState(1);
+  const [votingCount, setVotingCount] = useState(0);
 
-  const handleUpVoteButton = () => {
-    console.log("handle upvote");
-    let count = votingCount + 1;
-    setVotingCount(count);
+  const { data, error } = useSWR(`/api/getCoffeeStoreById?id=${id}`, fetcher);
+
+  useEffect(() => {
+    if (data && data.length > 0) {
+      setCoffeeStore(data[0]);
+
+      setVotingCount(data[0].voting);
+    }
+  }, [data]);
+
+  const handleUpVoteButton = async () => {
+    try {
+      const response = await fetch("/api/upvoteCoffeeStoreById", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id,
+        }),
+      });
+
+      const dbCoffeeStore = await response.json();
+      if (dbCoffeeStore && dbCoffeeStore.length > 0) {
+        let count = votingCount + 1;
+        setVotingCount(count);
+      }
+    } catch (error) {
+      console.error("Error upvoting coffee store", error);
+    }
   };
+
+  if (error) {
+    return <div>Something went wrong retrieving coffee store page</div>;
+  }
 
   return (
     <div className={styles.layout}>
@@ -130,7 +159,7 @@ const CoffeeStore = (initialProps) => {
         <div className={styles.col1}>
           <Image
             className={styles.storeImg}
-            alt={name || "defaultImgUrl"}
+            alt={name || "defaultImg"}
             src={imgUrl || defaultImgUrl}
             width={600}
             height={360}
@@ -139,18 +168,33 @@ const CoffeeStore = (initialProps) => {
         <div className={cls("glass", styles.col2)}>
           {address && (
             <div className={styles.iconWrapper}>
-              <Image src="/static/icons/places.svg" width={24} height={24} />
+              <Image
+                alt="places"
+                src="/static/icons/places.svg"
+                width={24}
+                height={24}
+              />
               <p className={styles.text}>{address}</p>
             </div>
           )}
           {distance && (
             <div className={styles.iconWrapper}>
-              <Image src="/static/icons/nearMe.svg" width={24} height={24} />
+              <Image
+                alt="nearMe"
+                src="/static/icons/nearMe.svg"
+                width={24}
+                height={24}
+              />
               <p className={styles.text}>{distance} meters</p>
             </div>
           )}
           <div className={styles.iconWrapper}>
-            <Image src="/static/icons/star.svg" width={24} height={24} />
+            <Image
+              alt="star"
+              src="/static/icons/star.svg"
+              width={24}
+              height={24}
+            />
             <p className={styles.text}>{votingCount}</p>
           </div>
           <button className={styles.upVoteButton} onClick={handleUpVoteButton}>
