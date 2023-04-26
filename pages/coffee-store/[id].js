@@ -145,6 +145,7 @@ const CoffeeStore = (initialProps) => {
     <div className={styles.layout}>
       <Head>
         <title>{name}</title>
+        <meta name="description" content="Coffee Connoisseur" />
       </Head>
       <div className={styles.header}>
         <div className={styles.backToHomeLink}>

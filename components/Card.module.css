@@ -35,7 +35,10 @@
 }
 
 .cardImageWrapper {
+  position: relative;
   color: var(--text-white-100);
+  width: 260px;
+  height: 160px;
 }
 
 .cardImage {
