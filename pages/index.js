@@ -90,7 +90,7 @@ export default function Home(props) {
           <Image
             className={styles.heroImg}
             alt="hero"
-            src="/static/hero-image.png"
+            src="/static/hero-image.webp"
             width={600}
             height={300}
             priority
